@@ -13,6 +13,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using PragyoSala.Services.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using prayogsala_services.Middlewares;
 
 namespace prayogsala_services
 {
@@ -29,7 +33,25 @@ namespace prayogsala_services
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson(options => {
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
+            services.AddAuthentication(options => {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;                
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,                    
+                    ValidateIssuerSigningKey = true,
+                    ValidAudience = Configuration["JwtSettings:ValidAudience"],
+                    ValidIssuer = Configuration["JwtSettings:ValidIssuer"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JwtSettings:Secret"]))                     
+                };
+            });
             services.AddDbContext<AppDbContext>(options => {
                 options.UseMySql(
                     Configuration["ConnectionString"],
@@ -46,6 +68,7 @@ namespace prayogsala_services
                         .AllowCredentials();
                 });
             });
+            services.AddScoped<IAuthenticatedUserService, AuthenticatedUserService>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "prayogsala_services", Version = "v1" });
@@ -64,10 +87,11 @@ namespace prayogsala_services
 
             //app.UseHttpsRedirection();
             app.UseCors("CorsAllow");
-            app.UseRouting();
-
-            //app.UseAuthorization();
-
+            app.UseStaticFiles();
+            app.UseAuthentication();
+            app.UseRouting();            
+            app.UseAuthorization();
+            app.UseUserAuthMiddleware();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

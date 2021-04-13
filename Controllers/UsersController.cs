@@ -3,12 +3,15 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using PragyoSala.Services.Data;
 using PragyoSala.Services.Dtos;
 using PragyoSala.Services.Models;
+using prayogsala_services.Middlewares;
+using prayogsala_services.Util;
 
 namespace PragyoSala.Services.Controllers
 {
@@ -18,13 +21,16 @@ namespace PragyoSala.Services.Controllers
     {
         private readonly AppDbContext _context;
         private IConfiguration Configuration { get; }
+        private IAuthenticatedUserService _authenticatedService;
         public UsersController(
             AppDbContext context,
-            IConfiguration configuration
+            IConfiguration configuration,
+            IAuthenticatedUserService authenticatedService
             )
         {
             _context = context;
             Configuration = configuration;
+            _authenticatedService = authenticatedService;
         }
 
         [HttpPost]
@@ -35,7 +41,7 @@ namespace PragyoSala.Services.Controllers
                 {
                     Address = userDto.Address,
                     Email = userDto.Email,
-                    Password = ToSHA512(userDto.Password),
+                    Password = UserUtil.ToSHA512(userDto.Password),
                     FirstName = userDto.Fname,
                     LastName = userDto.Lname,
                     PhoneNo = userDto.Phone                    
@@ -56,14 +62,16 @@ namespace PragyoSala.Services.Controllers
         [HttpPost("login")]
         public ActionResult Login([FromBody] LoginDto login)
         {
-            var user = _context.Users.FirstOrDefault(x => x.Email == login.Email);
+            var user = _context.Users.FirstOrDefault(x => x.Email == login.Email);            
             if (user == null)
                 return BadRequest(new
                 {
                     Message = "Invalid username or password"
                 });
 
-            if (user.Password.Equals(ToSHA512(login.Password)))
+            var newHash =UserUtil.ToSHA512(login.Password);
+            Console.WriteLine($"{user.Password} {newHash}");
+            if (string.Equals(user.Password, newHash))
             {
                 return Ok(new AuthenticateResponse(user, generateJwtToken(user)));
             }
@@ -74,32 +82,33 @@ namespace PragyoSala.Services.Controllers
             });
         }
 
-        private string ToSHA512(string password)
+        [HttpGet("role")]
+        [Authorize]
+        public ActionResult Me()
         {
-            var bytes = System.Text.Encoding.UTF8.GetBytes(password);
-            using (var hash = System.Security.Cryptography.SHA512.Create())
-            {
-                var hashedInputBytes = hash.ComputeHash(bytes);
-
-                // Convert to text
-                // StringBuilder Capacity is 128, because 512 bits / 8 bits in byte * 2 symbols for byte 
-                var hashedInputStringBuilder = new System.Text.StringBuilder(128);
-                foreach (var b in hashedInputBytes)
-                    hashedInputStringBuilder.Append(b.ToString("X2"));
-                return hashedInputStringBuilder.ToString();
-            }
+            return Ok(
+               new {
+                    role = _authenticatedService.Role
+                }
+            );
         }
-        
         private string generateJwtToken(User user)
         {
             // generate token that is valid for 7 days
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(Configuration["JwtSettings:Secret"]);
+            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JwtSettings:Secret"]));
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] { new Claim("id", user.UserId.ToString()) }),
+                Subject = new ClaimsIdentity(
+                    new[] { 
+                        new Claim("id", user.UserId.ToString()),
+                        new Claim(ClaimTypes.Role, user.Role)
+                    }
+                ),
                 Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256),
+                Issuer = Configuration["JwtSettings:ValidIssuer"],
+                Audience = Configuration["JwtSettings:ValidAudience"]
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token); 

@@ -10,5 +10,9 @@ namespace PragyoSala.Services.Data
 
         }
         public DbSet<User> Users { get; set; }
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<CourseRate> CourseRates { get; set; }
+        public DbSet<Chapter> Chapters { get; set; }
+        public DbSet<Topic> Topics { get; set; }
     }
 }
