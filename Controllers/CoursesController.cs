@@ -46,7 +46,8 @@ namespace PragyoSala.Services.Controllers
 
             course = new Course();
             course.CourseTitle = courseDto.CourseTitle;
-            course.Image = imageName;
+            course.Image = imageName;          
+            course.CategoryId = courseDto.CategoryId;  
             course.CreatedAt = DateTime.UtcNow;
             course.UpdatedAt = DateTime.UtcNow;
             course.UserId = _authenticatedUser.UserId;
@@ -68,8 +69,27 @@ namespace PragyoSala.Services.Controllers
             var course = _context.Courses
                 .Include(x => x.Chapters)
                     .ThenInclude(x => x.Topics)
+                        .ThenInclude(x => x.Video)
                 .FirstOrDefault(x => x.CourseId == courseId);
             return Ok(course);
+        }
+
+        [HttpGet("tops")]
+        public ActionResult GetTopCourses()
+        {
+            var lists = _context.Courses.Where(x => 
+                x.UserId == _authenticatedUser.UserId
+            ).Select(c => new {
+                  CourseId = c.CourseId,
+                  CourseTitle = c.CourseTitle,      
+                  Image = c.Image,
+                  StudentsCount = c.CourseStudents.Count()
+            })
+            .OrderByDescending(x => x.StudentsCount)
+            .Take(10)
+            .ToList();
+
+            return Ok(lists);
         }
 
         [HttpPost("{courseId}/chapters")]
@@ -119,5 +139,61 @@ namespace PragyoSala.Services.Controllers
             return Ok(new {Message = "new topic created"});
 
         }
+
+        [HttpPost("{courseId}/chapters/{chapterId}/topics/{topicId}/video")]
+        public ActionResult AddNewVideo(
+            [FromRoute] int courseId,
+            [FromRoute] int chapterId,
+            [FromRoute] int topicId,
+            [FromForm] VideoUploadDto videoDto
+            )
+        {
+            var course = _context.Courses.Where(x => x.CourseId == courseId).FirstOrDefault();
+            if(course == null)
+            {
+                return BadRequest(new {Message = "Course not found"});
+            }
+
+            var chapter = _context.Chapters.Where(x => x.ChapterId == chapterId && x.CourseId == courseId).FirstOrDefault();
+            if(chapter == null)
+            {
+                return BadRequest(new {Message = "Chapter not found"});
+            }
+            var topic = _context.Topics.Where(x => x.ChapterId == chapterId && x.CourseId == courseId && x.TopicId == topicId).FirstOrDefault();
+            if(topic == null)
+            {
+                return BadRequest(new {Message = "Topic not found"});
+            }
+
+            string videoName = Guid.NewGuid().ToString() + Path.GetExtension(videoDto.Video.FileName);
+            string savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\Uploads\\Videos", videoName);            
+            using(var stream = new FileStream(savePath, FileMode.CreateNew))
+            {
+                videoDto.Video.CopyTo(stream);
+            }
+
+            var video = new Video
+            {
+                VideoName = videoName,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow            
+            };
+
+            topic.Video = video;
+            _context.Topics.Update(topic);
+            _context.SaveChanges();
+
+            // course = new Course();
+            // course.CourseTitle = courseDto.CourseTitle;
+            // course.Image = imageName;
+            // course.CreatedAt = DateTime.UtcNow;
+            // course.UpdatedAt = DateTime.UtcNow;
+            // course.UserId = _authenticatedUser.UserId;
+            // _context.Courses.Add(course);
+            // _context.SaveChanges();
+            
+            return Ok(new {Message = "New course added"});
+        }
     }
+    
 }

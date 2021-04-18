@@ -17,6 +17,32 @@ namespace prayogsala_services.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64)
                 .HasAnnotation("ProductVersion", "5.0.4");
 
+            modelBuilder.Entity("PragyoSala.Services.Models.Category", b =>
+                {
+                    b.Property<int>("CategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Link")
+                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("CategoryId");
+
+                    b.ToTable("categories");
+                });
+
             modelBuilder.Entity("PragyoSala.Services.Models.Chapter", b =>
                 {
                     b.Property<int>("ChapterId")
@@ -54,6 +80,9 @@ namespace prayogsala_services.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
                     b.Property<string>("CourseTitle")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
@@ -70,6 +99,8 @@ namespace prayogsala_services.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("CourseId");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("UserId");
 
@@ -99,6 +130,27 @@ namespace prayogsala_services.Migrations
                     b.HasIndex("CourseId");
 
                     b.ToTable("course_rate");
+                });
+
+            modelBuilder.Entity("PragyoSala.Services.Models.CourseStudent", b =>
+                {
+                    b.Property<int>("CourseStudentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CourseStudentId");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("course_students");
                 });
 
             modelBuilder.Entity("PragyoSala.Services.Models.Topic", b =>
@@ -134,14 +186,16 @@ namespace prayogsala_services.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Video")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<int?>("VideoId")
+                        .HasColumnType("int");
 
                     b.HasKey("TopicId");
 
                     b.HasIndex("ChapterId");
 
                     b.HasIndex("CourseId");
+
+                    b.HasIndex("VideoId");
 
                     b.ToTable("topics");
                 });
@@ -178,10 +232,33 @@ namespace prayogsala_services.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("PragyoSala.Services.Models.Video", b =>
+                {
+                    b.Property<int>("VideoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("VideoName")
+                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+
+                    b.HasKey("VideoId");
+
+                    b.ToTable("videos");
+                });
+
             modelBuilder.Entity("PragyoSala.Services.Models.Chapter", b =>
                 {
                     b.HasOne("PragyoSala.Services.Models.Course", "Course")
-                        .WithMany()
+                        .WithMany("Chapters")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -191,11 +268,17 @@ namespace prayogsala_services.Migrations
 
             modelBuilder.Entity("PragyoSala.Services.Models.Course", b =>
                 {
+                    b.HasOne("PragyoSala.Services.Models.Category", "Category")
+                        .WithMany("Courses")
+                        .HasForeignKey("CategoryId");
+
                     b.HasOne("PragyoSala.Services.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Category");
 
                     b.Navigation("User");
                 });
@@ -211,10 +294,29 @@ namespace prayogsala_services.Migrations
                     b.Navigation("Course");
                 });
 
+            modelBuilder.Entity("PragyoSala.Services.Models.CourseStudent", b =>
+                {
+                    b.HasOne("PragyoSala.Services.Models.Course", "Course")
+                        .WithMany("CourseStudents")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PragyoSala.Services.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("PragyoSala.Services.Models.Topic", b =>
                 {
                     b.HasOne("PragyoSala.Services.Models.Chapter", "Chapter")
-                        .WithMany()
+                        .WithMany("Topics")
                         .HasForeignKey("ChapterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -225,13 +327,33 @@ namespace prayogsala_services.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PragyoSala.Services.Models.Video", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId");
+
                     b.Navigation("Chapter");
 
                     b.Navigation("Course");
+
+                    b.Navigation("Video");
+                });
+
+            modelBuilder.Entity("PragyoSala.Services.Models.Category", b =>
+                {
+                    b.Navigation("Courses");
+                });
+
+            modelBuilder.Entity("PragyoSala.Services.Models.Chapter", b =>
+                {
+                    b.Navigation("Topics");
                 });
 
             modelBuilder.Entity("PragyoSala.Services.Models.Course", b =>
                 {
+                    b.Navigation("Chapters");
+
+                    b.Navigation("CourseStudents");
+
                     b.Navigation("Rates");
                 });
 #pragma warning restore 612, 618

@@ -17,8 +17,10 @@ namespace PragyoSala.Services.Models
         // navigational properties
         public int UserId { get; set; }
         public User User { get; set; }
-
         public List<CourseRate> Rates { get; set; }
         public List<Chapter> Chapters { get; set; }
+        public List<CourseStudent> CourseStudents { get; set; }
+        public int? CategoryId { get; set; }
+        public Category Category { get; set;}
     }
 }

@@ -136,9 +136,6 @@ namespace prayogsala_services.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Video")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
                     b.HasKey("TopicId");
 
                     b.HasIndex("ChapterId");

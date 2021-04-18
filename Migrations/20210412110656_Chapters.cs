@@ -39,8 +39,7 @@ namespace prayogsala_services.Migrations
                     TopicId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Order = table.Column<int>(type: "int", nullable: false),
-                    TopicName = table.Column<string>(type: "longtext CHARACTER SET utf8mb4", nullable: true),
-                    Video = table.Column<string>(type: "longtext CHARACTER SET utf8mb4", nullable: true),
+                    TopicName = table.Column<string>(type: "longtext CHARACTER SET utf8mb4", nullable: true),                    
                     Length = table.Column<double>(type: "double", nullable: false),
                     IsWatched = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),

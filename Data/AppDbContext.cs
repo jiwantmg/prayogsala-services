@@ -14,5 +14,7 @@ namespace PragyoSala.Services.Data
         public DbSet<CourseRate> CourseRates { get; set; }
         public DbSet<Chapter> Chapters { get; set; }
         public DbSet<Topic> Topics { get; set; }
+        public DbSet<Video> Videos { get; set; }
+        public DbSet<Category> Categories { get; set; }
     }
 }

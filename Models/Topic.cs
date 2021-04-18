@@ -8,8 +8,7 @@ namespace PragyoSala.Services.Models
     {
         public int TopicId { get; set; }
         public int Order { get; set; }
-        public string TopicName { get; set; }
-        public string Video { get; set; }
+        public string TopicName { get; set; }       
         public double Length { get; set; }
         public bool IsWatched { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -20,5 +19,7 @@ namespace PragyoSala.Services.Models
         public Chapter Chapter { get; set;}
         public int CourseId { get; set; }
         public Course Course { get; set; }
+        public int? VideoId { get; set; }
+        public Video Video { get; set;}
     }
 }
