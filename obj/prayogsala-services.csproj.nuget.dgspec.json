@@ -1,31 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\jiwan\\Documents\\projects\\prayogsala\\prayogsala-services\\prayogsala-services.csproj": {}
+    "/mnt/projects/projects/Prayogsala/prayogsala-services/prayogsala-services.csproj": {}
   },
   "projects": {
-    "C:\\Users\\jiwan\\Documents\\projects\\prayogsala\\prayogsala-services\\prayogsala-services.csproj": {
+    "/mnt/projects/projects/Prayogsala/prayogsala-services/prayogsala-services.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\jiwan\\Documents\\projects\\prayogsala\\prayogsala-services\\prayogsala-services.csproj",
+        "projectUniqueName": "/mnt/projects/projects/Prayogsala/prayogsala-services/prayogsala-services.csproj",
         "projectName": "prayogsala-services",
-        "projectPath": "C:\\Users\\jiwan\\Documents\\projects\\prayogsala\\prayogsala-services\\prayogsala-services.csproj",
-        "packagesPath": "C:\\Users\\jiwan\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\jiwan\\Documents\\projects\\prayogsala\\prayogsala-services\\obj\\",
+        "projectPath": "/mnt/projects/projects/Prayogsala/prayogsala-services/prayogsala-services.csproj",
+        "packagesPath": "/home/ghost/.nuget/packages/",
+        "outputPath": "/mnt/projects/projects/Prayogsala/prayogsala-services/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Microsoft\\Xamarin\\NuGet\\"
-        ],
         "configFilePaths": [
-          "C:\\Users\\jiwan\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
+          "/home/ghost/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net5.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -91,7 +85,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.100\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/5.0.201/RuntimeIdentifierGraph.json"
         }
       }
     }

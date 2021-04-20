@@ -7,6 +7,13 @@ using System.Linq;
 using System.IO;
 using PragyoSala.Services.Models;
 using prayogsala_services.Middlewares;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using Newtonsoft.Json;
+using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace PragyoSala.Services.Controllers
 {
@@ -16,6 +23,8 @@ namespace PragyoSala.Services.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IAuthenticatedUserService _authenticatedUser;
+        private string baseurl = "https://khalti.com/api/v2/payment/verify/";
+        private string key = "test_secret_key_e6c15ee8d5af48c9a4d0dd66662aaca7";
         public CoursesController(
             AppDbContext context,
             IAuthenticatedUserService authenticatedUser
@@ -38,7 +47,7 @@ namespace PragyoSala.Services.Controllers
                 return BadRequest(new {Message = "Thumbnail cannot be empty"});
 
             string imageName = Guid.NewGuid().ToString() + Path.GetExtension(courseDto.Thumbnail.FileName);
-            string savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\Uploads", imageName);            
+            string savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"+Path.DirectorySeparatorChar+"Uploads", imageName);            
             using(var stream = new FileStream(savePath, FileMode.CreateNew))
             {
                 courseDto.Thumbnail.CopyTo(stream);
@@ -56,10 +65,27 @@ namespace PragyoSala.Services.Controllers
             
             return Ok(new {Message = "New course added"});
         }
-        [HttpGet]
-        public ActionResult GetAllCourses()
+        [HttpGet("{courseType}/all")]
+        public ActionResult GetAllCourses([FromRoute] string courseType)
         {
-            var lists = _context.Courses.Where(x => x.UserId == _authenticatedUser.UserId);
+            List<Course> lists = new List<Course>();
+            if(courseType == "teacher" && _authenticatedUser.Role == "teacher") {
+                lists = _context.Courses.Where(x => x.UserId == _authenticatedUser.UserId).ToList();
+            }                
+            else if(courseType == "admin" && _authenticatedUser.Role == "admin") {
+                lists = _context.Courses.Where(x => x.UserId == _authenticatedUser.UserId).ToList();
+            }                
+            else {
+                // find courses enrolled by the student
+                var enrolledCourses = _context.CourseStudents
+                                                .Where(x => x.UserId == _authenticatedUser.UserId)
+                                                .Include(x => x.Course)                                            
+                                                .ToList();
+                foreach(var eC in enrolledCourses)
+                {
+                    lists.Add(eC.Course);
+                }
+            }
             return Ok(lists);
         }
 
@@ -71,7 +97,12 @@ namespace PragyoSala.Services.Controllers
                     .ThenInclude(x => x.Topics)
                         .ThenInclude(x => x.Video)
                 .FirstOrDefault(x => x.CourseId == courseId);
-            return Ok(course);
+            // check if this course is paid by the user or not
+            var paidStatus = _context.CourseStudents.FirstOrDefault(x => x.CourseId == courseId && x.UserId == _authenticatedUser.UserId);            
+            return Ok(new {
+                course,
+                paidStatus
+            });
         }
 
         [HttpGet("tops")]
@@ -166,7 +197,7 @@ namespace PragyoSala.Services.Controllers
             }
 
             string videoName = Guid.NewGuid().ToString() + Path.GetExtension(videoDto.Video.FileName);
-            string savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\Uploads\\Videos", videoName);            
+            string savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"+Path.DirectorySeparatorChar+"Uploads"+Path.DirectorySeparatorChar+"Videos", videoName);            
             using(var stream = new FileStream(savePath, FileMode.CreateNew))
             {
                 videoDto.Video.CopyTo(stream);
@@ -194,6 +225,73 @@ namespace PragyoSala.Services.Controllers
             
             return Ok(new {Message = "New course added"});
         }
-    }
-    
+
+        [HttpPut("enroll/{courseId}")]
+        public IActionResult EnrollStudent([FromRoute] int courseId)
+        {
+            // check if course exists or not
+            var course = _context.Courses.FirstOrDefault(x => x.CourseId == courseId);
+            if(course == null)
+                return BadRequest(new { Message = "Course not found" });
+            
+            // check if student is already enrolled 
+            var studentCourse = _context.CourseStudents.FirstOrDefault(x => x.CourseId == courseId && x.UserId == _authenticatedUser.UserId);
+            if(studentCourse != null)
+                return BadRequest(new { Message = "Student is already enroled"});
+
+            studentCourse = new CourseStudent()
+            {
+                CourseId = course.CourseId,
+                UserId = _authenticatedUser.UserId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                Status = "enrolled"                
+            };
+
+            _context.Add(studentCourse);
+            _context.SaveChanges();
+
+            return Ok(new {Message = "New student saved"});
+        }
+ 
+        [HttpPost("payment/verify/{courseId}")]
+        public async Task<ActionResult> VerifyPaymentForOrder([FromRoute] int courseId, [FromBody] VerifyPayment command, CancellationToken cancellationToken)
+        {
+            var data = new {token = command.Token, amount = command.Amount };            
+            
+            using(HttpClient httpClient = new HttpClient())
+            {                
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Key", key);
+                var payload = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+                using(HttpResponseMessage res = await httpClient.PostAsync(baseurl, payload))
+                {
+                    if(res.IsSuccessStatusCode)
+                    {
+                        using(HttpContent content = res.Content)
+                        {
+                            string response = await content.ReadAsStringAsync();
+                            Console.WriteLine(response);
+                            // update course as paid
+                            var studentCourse = _context.CourseStudents.FirstOrDefault(
+                                x => x.CourseId == courseId
+                                && x.UserId == _authenticatedUser.UserId
+                            );
+
+                            if(studentCourse == null)
+                                return BadRequest(new { Message = "Course not found" });
+                            
+                            studentCourse.Status = "purchased";                            
+                            _context.CourseStudents.Update(studentCourse);
+                            _context.SaveChanges();
+                        }
+                    }
+                    else
+                    {
+                        return BadRequest(new { Message = "Something went wrong while making a payment, please try again" });
+                    }             
+                }
+            }
+            return Ok(new {Message = "Payment made successfull"});
+       }
+    }   
 }
