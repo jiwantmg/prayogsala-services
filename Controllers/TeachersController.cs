@@ -43,6 +43,25 @@ namespace PragyoSala.Services.Controllers
             }
         }
 
+        [HttpPut]
+        public ActionResult UpdateTeacher([FromBody]UserDto userDto) {
+            // find the user
+            var user = _context.Users.FirstOrDefault(x => x.UserId == userDto.UserId);
+            if(user == null)
+                return BadRequest(new { Message = "User not found" });
+             
+            user.Address = userDto.Address;
+            user.Email = userDto.Email;                   
+            user.FirstName = userDto.Fname;
+            user.LastName = userDto.Lname;
+            user.PhoneNo = userDto.Phone;                   
+
+            _context.Users.Update(user);
+            _context.SaveChanges();
+            return Ok(new { Message = "User is updated"});
+        }
+
+
         [HttpGet]
         public ActionResult GetTeachers()
         {

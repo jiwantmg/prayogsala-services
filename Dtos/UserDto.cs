@@ -4,7 +4,7 @@ namespace PragyoSala.Services.Dtos
 {
     public class UserDto
     {
-        public int Id { get; set; }
+        public int UserId { get; set; }
         public string Fname { get; set; }
         public string Lname { get; set; }
         public string Email { get; set; }

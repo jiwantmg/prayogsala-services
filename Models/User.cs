@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
 
 namespace PragyoSala.Services.Models
 {
@@ -9,6 +10,7 @@ namespace PragyoSala.Services.Models
         public string FirstName { get; set; }
         public string LastName { get; set; }        
         public string Email { get; set; }
+        [JsonIgnore]
         public string Password { get; set; }
         public string PhoneNo { get; set; }
         public string Address { get; set; }

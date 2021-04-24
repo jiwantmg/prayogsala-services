@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/mnt/projects/projects/Prayogsala/prayogsala-services/prayogsala-services.csproj": {}
+    "/home/ghost/projects/prayogsala/prayogsala-services/prayogsala-services.csproj": {}
   },
   "projects": {
-    "/mnt/projects/projects/Prayogsala/prayogsala-services/prayogsala-services.csproj": {
+    "/home/ghost/projects/prayogsala/prayogsala-services/prayogsala-services.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/mnt/projects/projects/Prayogsala/prayogsala-services/prayogsala-services.csproj",
+        "projectUniqueName": "/home/ghost/projects/prayogsala/prayogsala-services/prayogsala-services.csproj",
         "projectName": "prayogsala-services",
-        "projectPath": "/mnt/projects/projects/Prayogsala/prayogsala-services/prayogsala-services.csproj",
+        "projectPath": "/home/ghost/projects/prayogsala/prayogsala-services/prayogsala-services.csproj",
         "packagesPath": "/home/ghost/.nuget/packages/",
-        "outputPath": "/mnt/projects/projects/Prayogsala/prayogsala-services/obj/",
+        "outputPath": "/home/ghost/projects/prayogsala/prayogsala-services/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/ghost/.nuget/NuGet/NuGet.Config"
@@ -85,7 +85,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/5.0.201/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/5.0.202/RuntimeIdentifierGraph.json"
         }
       }
     }

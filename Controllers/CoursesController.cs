@@ -293,5 +293,12 @@ namespace PragyoSala.Services.Controllers
             }
             return Ok(new {Message = "Payment made successfull"});
        }
-    }   
+
+       [HttpGet("search")]
+       public IActionResult Search([FromQuery] string query)
+       {
+           var courses = _context.Courses.Where(x => x.CourseTitle.Contains(query)).ToList();
+           return Ok(courses);
+       }
+    }
 }
