@@ -80,7 +80,8 @@ namespace PragyoSala.Services.Controllers
         {
             var categories = _context.Categories
                                     .Where(x => x.DisplayHome)
-                                    .Include(x => x.Courses.Take(10))
+                                    .Include(x => x.Courses.Take(10))                                    
+                                        .ThenInclude( x => x.Rates.Where(r => r.Status))
                                     .ToList();
         
             return Ok(categories);

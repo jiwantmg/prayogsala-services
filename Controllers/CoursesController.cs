@@ -96,6 +96,7 @@ namespace PragyoSala.Services.Controllers
                 .Include(x => x.Chapters)
                     .ThenInclude(x => x.Topics)
                         .ThenInclude(x => x.Video)
+                .Include(x => x.Rates.Where(x => x.Status).Take(1))
                 .FirstOrDefault(x => x.CourseId == courseId);
             // check if this course is paid by the user or not
             var paidStatus = _context.CourseStudents.FirstOrDefault(x => x.CourseId == courseId && x.UserId == _authenticatedUser.UserId);            
@@ -299,6 +300,46 @@ namespace PragyoSala.Services.Controllers
        {
            var courses = _context.Courses.Where(x => x.CourseTitle.Contains(query)).ToList();
            return Ok(courses);
+       }
+
+       [HttpGet("{courseId}/rates")]
+       public IActionResult GetCourseRates([FromRoute] int courseId)
+       {
+           // find if course Id exists
+           var course = _context.Courses.FirstOrDefault(x => x.CourseId == courseId);
+           if(course == null)
+            return BadRequest(new {Message = "Course does not found"});
+
+           // find all rates of the course
+           var rates = _context.CourseRates.Where(x => x.CourseId == courseId).OrderByDescending(x => x.CratedAt).ToList();
+           return Ok(rates);
+       }
+
+       [HttpPost("{courseId}/rates")]
+       public IActionResult AddNewRates([FromBody] NewRate rate, [FromRoute] int courseId)
+       {
+            if(rate.Rate <= 0)
+                return BadRequest(new {Message = "Please provide course rate > 0"});           
+
+            // update the rate also
+            var oldRate = _context.CourseRates.FirstOrDefault(x => x.Status && x.CourseId == courseId);
+            if(oldRate != null)
+            {
+                oldRate.Status = false;
+                _context.CourseRates.Update(oldRate);
+            }            
+
+            var courseRate = new CourseRate
+            {
+                CourseId = courseId,
+                Rate = rate.Rate,
+                CratedAt = DateTime.Now,
+                Status = true
+            };
+
+            _context.CourseRates.Add(courseRate);
+            _context.SaveChanges();
+            return Ok(new {Message = "New Rate added to course"});
        }
     }
 }
