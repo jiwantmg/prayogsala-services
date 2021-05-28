@@ -64,7 +64,10 @@ namespace PragyoSala.Services.Controllers
             if(category == null)
                 return NotFound(new {Message = "Category with link does not found"});
             
-            var courses = _context.Courses.Where(x => x.CategoryId == category.CategoryId).ToList();
+            var courses = _context.Courses
+                .Where(x => x.CategoryId == category.CategoryId)
+                .Include(x => x.Rates.Where(r => r.Status))
+                .ToList();
             return Ok(courses);
         }
         
