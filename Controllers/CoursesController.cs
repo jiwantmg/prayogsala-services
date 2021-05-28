@@ -298,7 +298,10 @@ namespace PragyoSala.Services.Controllers
        [HttpGet("search")]
        public IActionResult Search([FromQuery] string query)
        {
-           var courses = _context.Courses.Where(x => x.CourseTitle.Contains(query)).ToList();
+           var courses = _context.Courses
+                    .Where(x => x.CourseTitle.Contains(query))
+                    .Include(x => x.Rates.Where(r => r.Status))
+                    .ToList();
            return Ok(courses);
        }
 
